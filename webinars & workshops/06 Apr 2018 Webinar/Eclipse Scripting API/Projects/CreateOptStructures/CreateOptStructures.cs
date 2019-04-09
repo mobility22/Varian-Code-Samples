@@ -62,11 +62,11 @@ namespace VMS.TPS
             }
             StructureSet ss = context.StructureSet;
             PlanSetup ps = context.PlanSetup;
-            ps.DoseValuePresentation = (DoseValuePresentation)1;
+            ps.DoseValuePresentation = DoseValuePresentation.Absolute;
             Dose ds = context.PlanSetup.Dose;
 
 
-            DoseValue dv = new DoseValue(3000.00000, "cGy");
+            DoseValue dv = new DoseValue(3000.00000, DoseValue.DoseUnit.cGy);
             //MessageBox.Show($"{dv.Dose} {dv.Unit} {ds.DoseMax3D} {ps.DoseValuePresentation}");
             context.Patient.BeginModifications();   // enable writing with this script.
             Structure lung = ss.Structures.FirstOrDefault(x => x.Id == Lung_ID);
@@ -85,7 +85,7 @@ namespace VMS.TPS
             {
                 chestWall.SegmentVolume = chestWall.SegmentVolume.Sub(lung.SegmentVolume);
             }
-            MessageBox.Show($"Vchestwall 3000cGy = {chestWall.Volume:F1} cc");
+            MessageBox.Show($"V chestwall @30Gy = {chestWall.Volume:F1} cc");
 
         }
     }
