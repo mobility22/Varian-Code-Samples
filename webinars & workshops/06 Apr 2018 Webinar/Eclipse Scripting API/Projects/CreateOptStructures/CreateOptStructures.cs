@@ -47,6 +47,8 @@ namespace VMS.TPS
         // Change these IDs to match your clinical conventions
         const string ChestWall_ID = "ChestWall";
         const string Lung_ID = "Lungs";
+        const string MIP_ID = "#MIP";
+        const string ITV_ID = "#ITV";
         const string SCRIPT_NAME = "Opt Structures Script";
 
         public Script()
@@ -70,6 +72,9 @@ namespace VMS.TPS
             //MessageBox.Show($"{dv.Dose} {dv.Unit} {ds.DoseMax3D} {ps.DoseValuePresentation}");
             context.Patient.BeginModifications();   // enable writing with this script.
             Structure lung = ss.Structures.FirstOrDefault(x => x.Id == Lung_ID);
+            Structure mip = ss.Structures.FirstOrDefault(x => x.Id == MIP_ID);
+            Structure itv = ss.Structures.FirstOrDefault(x => x.Id == ITV_ID);
+
             Structure chestWall = ss.Structures.FirstOrDefault(x => x.Id == ChestWall_ID);
             if (chestWall == null)
             {
@@ -84,6 +89,14 @@ namespace VMS.TPS
             if (lung != null)
             {
                 chestWall.SegmentVolume = chestWall.SegmentVolume.Sub(lung.SegmentVolume);
+            }
+            if (mip != null)
+            {
+                chestWall.SegmentVolume = chestWall.SegmentVolume.Sub(mip.SegmentVolume);
+            }
+            if (itv != null)
+            {
+                chestWall.SegmentVolume = chestWall.SegmentVolume.Sub(itv.SegmentVolume);
             }
             MessageBox.Show($"V chestwall @30Gy = {chestWall.Volume:F1} cc");
 
