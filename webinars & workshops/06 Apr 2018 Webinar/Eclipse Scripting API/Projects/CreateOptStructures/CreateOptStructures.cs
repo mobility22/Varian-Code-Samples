@@ -64,13 +64,13 @@ namespace VMS.TPS
             }
             StructureSet ss = context.StructureSet;
 
-            // find Rectum
-            Structure rectum = ss.Structures.FirstOrDefault(x => x.Id == RECTUM_ID);
-            if (rectum == null)
-            {
-                MessageBox.Show(string.Format("'{0}' not found!", RECTUM_ID), SCRIPT_NAME, MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                return;
-            }
+            //// find Rectum
+            //Structure rectum = ss.Structures.FirstOrDefault(x => x.Id == RECTUM_ID);
+            //if (rectum == null)
+            //{
+            //    MessageBox.Show(string.Format("'{0}' not found!", RECTUM_ID), SCRIPT_NAME, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            //    return;
+            //}
 
             // find PTV
             Structure ptv = ss.Structures.FirstOrDefault(x => x.Id == PTV_ID);
@@ -86,25 +86,30 @@ namespace VMS.TPS
             //============================
 
             // create the empty "ptv+5mm" structure
-            Structure ptv_5mm = ss.AddStructure("PTV", EXPANDED_PTV_ID);
+            Structure ptv_5mm = ss.Structures.FirstOrDefault(x => x.Id == EXPANDED_PTV_ID);
+            if(ptv_5mm == null)
+            {
+                ptv_5mm = ss.AddStructure("PTV", EXPANDED_PTV_ID);
+            }
 
             // expand PTV
             ptv_5mm.SegmentVolume = ptv.Margin(5.0);
+            AxisAlignedMargins axisAlignedMargins = new AxisAlignedMargins { StructureMarginGeometry.Outer, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 };
+            ptv_5mm.SegmentVolume = ptv.AsymmetricMargin(axisAlignedMargins);
 
             //============================
             // subtract rectum from expansion to create 5mm buffer
             //============================
-            Structure buffered_rectum = ss.AddStructure("AVOIDANCE", RECTUM_OPT_ID);
+            //Structure buffered_rectum = ss.AddStructure("AVOIDANCE", RECTUM_OPT_ID);
 
             // calculate overlap structures using Boolean operators.
-            buffered_rectum.SegmentVolume = rectum.Sub(ptv_5mm); //'Sub' subtracts overlapping volume of expanded PTV from rectum
+            //buffered_rectum.SegmentVolume = rectum.Sub(ptv_5mm); //'Sub' subtracts overlapping volume of expanded PTV from rectum
 
-            string message = string.Format("{0} volume = {4}\n{1} volume = {5}\n{2} volume = {6}\n{3} volume = {7}",
-                    ptv.Id, rectum.Id, ptv_5mm.Id, buffered_rectum.Id,
-                    ptv.Volume, rectum.Volume, ptv_5mm.Volume, buffered_rectum.Volume);
+            string message = string.Format("{0} volume = {2:F1}\n{1} volume = {3:F1}",
+                    ptv.Id, ptv_5mm.Id, ptv.Volume, ptv_5mm.Volume);
             MessageBox.Show(message);
 
-            ss.RemoveStructure(ptv_5mm);
+            //ss.RemoveStructure(ptv_5mm);
         }
     }
 }
