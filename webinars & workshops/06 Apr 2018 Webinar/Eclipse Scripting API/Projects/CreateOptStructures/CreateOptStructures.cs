@@ -37,18 +37,43 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
+using System.Windows.Forms;
 
 [assembly: ESAPIScript(IsWriteable = true)]
 
 namespace VMS.TPS
+
 {
+    public static class Prompt
+    {
+        public static string ShowDialog(string text, string caption)
+        {
+            Form prompt = new Form()
+            {
+                Width = 500,
+                Height = 150,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                Text = caption,
+                StartPosition = FormStartPosition.CenterScreen
+            };
+            Label textLabel = new Label() { Left = 50, Top = 20, Width= 300, Text = text };
+            TextBox textBox = new TextBox() { Left = 50, Top = 50, Width = 400 };
+            Button confirmation = new Button() { Text = "Ok", Left = 350, Width = 100, Top = 70, DialogResult = DialogResult.OK };
+            confirmation.Click += (sender, e) => { prompt.Close(); };
+            prompt.Controls.Add(textBox);
+            prompt.Controls.Add(confirmation);
+            prompt.Controls.Add(textLabel);
+            prompt.AcceptButton = confirmation;
+
+            return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : "";
+        }
+    }
+
     public class Script
     {
         // Change these IDs to match your clinical conventions
         const string PTV_ID = "PTV";
-        const string RECTUM_ID = "Rectum";
-        const string EXPANDED_PTV_ID = "PTV+5mm";
-        const string RECTUM_OPT_ID = "RectumOpt5mm";
+        const string EXPANDED_PTV_ID = "PTVExp";
         const string SCRIPT_NAME = "Opt Structures Script";
 
         public Script()
@@ -59,57 +84,63 @@ namespace VMS.TPS
         {
             if (context.Patient == null || context.StructureSet == null)
             {
-                MessageBox.Show("Please load a patient, 3D image, and structure set before running this script.", SCRIPT_NAME, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                System.Windows.MessageBox.Show("Please load a patient, 3D image, and structure set before running this script.", SCRIPT_NAME, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return;
             }
             StructureSet ss = context.StructureSet;
 
-            //// find Rectum
-            //Structure rectum = ss.Structures.FirstOrDefault(x => x.Id == RECTUM_ID);
-            //if (rectum == null)
-            //{
-            //    MessageBox.Show(string.Format("'{0}' not found!", RECTUM_ID), SCRIPT_NAME, MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            //    return;
-            //}
 
             // find PTV
             Structure ptv = ss.Structures.FirstOrDefault(x => x.Id == PTV_ID);
             if (ptv == null)
             {
-                MessageBox.Show(string.Format("'{0}' not found!", PTV_ID), SCRIPT_NAME, MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                System.Windows.MessageBox.Show(string.Format("'{0}' not found!", PTV_ID), SCRIPT_NAME, MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return;
             }
             context.Patient.BeginModifications();   // enable writing with this script.
 
-            //============================
-            // GENERATE 5mm expansion of PTV
-            //============================
 
-            // create the empty "ptv+5mm" structure
-            Structure ptv_5mm = ss.Structures.FirstOrDefault(x => x.Id == EXPANDED_PTV_ID);
-            if(ptv_5mm == null)
+            // create the empty "ptv exp" structure
+            Structure ptv_exp = ss.Structures.FirstOrDefault(x => x.Id == EXPANDED_PTV_ID);
+            if (ptv_exp == null)
             {
-                ptv_5mm = ss.AddStructure("PTV", EXPANDED_PTV_ID);
+                ptv_exp = ss.AddStructure("PTV", EXPANDED_PTV_ID);
+                ptv_exp.SegmentVolume = ptv.SegmentVolume;
             }
 
-            // expand PTV
-            ptv_5mm.SegmentVolume = ptv.Margin(5.0);
-            AxisAlignedMargins axisAlignedMargins = new AxisAlignedMargins { StructureMarginGeometry.Outer, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5 };
-            ptv_5mm.SegmentVolume = ptv.AsymmetricMargin(axisAlignedMargins);
 
-            //============================
-            // subtract rectum from expansion to create 5mm buffer
-            //============================
-            //Structure buffered_rectum = ss.AddStructure("AVOIDANCE", RECTUM_OPT_ID);
+            double angle = Convert.ToDouble(Prompt.ShowDialog("Please input the direction(degree) for ptv expension", "PTV EXP"));
+            double margin = Convert.ToInt16(Prompt.ShowDialog("Please input the margin(mm) for ptv expension", "PTV EXP"));
 
-            // calculate overlap structures using Boolean operators.
-            //buffered_rectum.SegmentVolume = rectum.Sub(ptv_5mm); //'Sub' subtracts overlapping volume of expanded PTV from rectum
+            var nPlanes = ss.Image.ZSize;
+            for (int z = 0; z < nPlanes; z++)
+            {
+                var contoursOnImagePlane = ptv.GetContoursOnImagePlane(z);
+                if (contoursOnImagePlane != null && contoursOnImagePlane.Length > 0)
+                {
+
+                    foreach (var contour in contoursOnImagePlane)
+                    {
+                        VVector[] contourExp = (VVector[])contour.Clone();
+                        for (int n = 0; n < margin * 10; n++)
+                        {
+                            for (int i = 0; i < contour.Length; i++)
+                            {
+                                contourExp[i][0] = contour[i][0] + Math.Cos(Math.PI / 180 * angle) * 0.1 * n; //left
+                                contourExp[i][1] = contour[i][1] - Math.Sin(Math.PI / 180 * angle) * 0.1 * n; //sup
+                            }
+                            ptv_exp.AddContourOnImagePlane(contourExp, z);
+                        }
+
+                    }
+                }
+            }
+
 
             string message = string.Format("{0} volume = {2:F1}\n{1} volume = {3:F1}",
-                    ptv.Id, ptv_5mm.Id, ptv.Volume, ptv_5mm.Volume);
-            MessageBox.Show(message);
+                    ptv.Id, ptv_exp.Id, ptv.Volume, ptv_exp.Volume);
+            System.Windows.MessageBox.Show(message);
 
-            //ss.RemoveStructure(ptv_5mm);
         }
     }
 }

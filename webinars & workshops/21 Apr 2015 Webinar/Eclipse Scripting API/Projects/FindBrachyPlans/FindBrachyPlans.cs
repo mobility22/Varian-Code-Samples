@@ -36,10 +36,10 @@ namespace FindBrachyPlans
     {
       try
       {
-        using (Application app = Application.CreateApplication(null, null))
-        {
-          Execute(app);
-        }
+                using (Application app = Application.CreateApplication())
+                {
+                    Execute(app);
+                }
       }
       catch (Exception e)
       {
