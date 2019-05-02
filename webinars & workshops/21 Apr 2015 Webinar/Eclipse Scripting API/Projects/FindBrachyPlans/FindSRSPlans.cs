@@ -62,16 +62,18 @@ namespace FindBrachyPlans
         {
             int countTotal = 0;
             int countSRS = 0;
+            int countPatient = 0;
             int total = app.PatientSummaries.Count();
             string format = "dddd, MMMM dd, yyyy h:mm:ss tt";
             DateTime approvalDate;
             CultureInfo provider = CultureInfo.InvariantCulture;
+            string machineID = "";
+            string energyTreatment = "";
 
             foreach (PatientSummary ps in app.PatientSummaries.Where(x => (x.Id.Length == 12 && x.Id.StartsWith("1100"))))
             {
-                //Console.WriteLine(ps.Id);
-
                 countTotal++;
+                int patientCount = 1;
                 Patient p = app.OpenPatient(ps);
                 foreach (Course c in p.Courses.Where(x => !(x.Id.Contains("QA") || x.Id.Contains("test"))))
                 {
@@ -85,11 +87,23 @@ namespace FindBrachyPlans
                                 if (plan.PlannedDosePerFraction.Dose > 900)
                                 {
 
-                                    countSRS+=courseCount;
-                                    approvalDate = DateTime.ParseExact(plan.TreatmentApprovalDate, format, provider);
-                                    Console.WriteLine(countSRS + "/" + p.Id + "/" + Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + Math.Round(plan.PlannedDosePerFraction.Dose) +
-                                        "/" + "\"" + approvalDate.ToShortDateString() + "\"" + "/" + countTotal + "/" + total);
-                                    courseCount = 0;
+                                    foreach (Beam b in plan.Beams)
+                                    {
+                                        if (!b.IsSetupField) energyTreatment = b.EnergyModeDisplayName;
+
+                                        if (b.TreatmentUnit != null) machineID = b.TreatmentUnit.Id;
+                                    }
+                                    if (machineID.Equals("ROS_LINAC_TX"))
+                                    {
+                                        countPatient += patientCount;
+                                        countSRS += courseCount;
+                                        approvalDate = DateTime.ParseExact(plan.TreatmentApprovalDate, format, provider);
+                                        Console.WriteLine(countPatient + "/" + countSRS + "/" + p.Id + "/" + Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + Math.Round(plan.PlannedDosePerFraction.Dose) +
+                                            "/" + energyTreatment + "/" + "\"" + approvalDate.ToShortDateString() + "\"" + "/" + countTotal + "/" + total);
+                                        courseCount = 0;
+                                        patientCount = 0;
+                                    }
+
                                 }
                             }
                         }
