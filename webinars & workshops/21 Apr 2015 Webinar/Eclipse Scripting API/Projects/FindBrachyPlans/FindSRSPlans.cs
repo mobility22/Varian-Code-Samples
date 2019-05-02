@@ -80,7 +80,7 @@ namespace FindBrachyPlans
                     int courseCount = 1;
                     foreach (PlanSetup plan in c.PlanSetups.Where(x => x.PlanType == PlanType.ExternalBeam && x.ApprovalStatus == PlanSetupApprovalStatus.TreatmentApproved))
                     {
-                        if (plan.NumberOfFractions == 1 && !plan.Id.Contains("#") && !plan.Id.Contains(":"))
+                        if (plan.NumberOfFractions == 1)// && !plan.Id.Contains("#") && !plan.Id.Contains(":"))
                         {
                             if (p.PrimaryOncologistId.Length == 7) //4806689 chen; 2573524 koo;
                             {
@@ -98,7 +98,7 @@ namespace FindBrachyPlans
                                         countPatient += patientCount;
                                         countSRS += courseCount;
                                         approvalDate = DateTime.ParseExact(plan.TreatmentApprovalDate, format, provider);
-                                        Console.WriteLine(countPatient + "/" + countSRS + "/" + p.Id + "/" + Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + Math.Round(plan.PlannedDosePerFraction.Dose) +
+                                        Console.WriteLine(countPatient + "/" + countSRS + "/" + p.Id + "/" + p.LastName+","+p.FirstName + "/" + Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + Math.Round(plan.PlannedDosePerFraction.Dose) +
                                             "/" + energyTreatment + "/" + "\"" + approvalDate.ToShortDateString() + "\"" + "/" + countTotal + "/" + total);
                                         courseCount = 0;
                                         patientCount = 0;
