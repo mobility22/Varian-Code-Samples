@@ -55,7 +55,7 @@ namespace FindBrachyPlans
             foreach (PatientSummary ps in app.PatientSummaries.Where(x => (x.Id.Length == 12 && x.Id.StartsWith("1100"))))
             {
                 //Console.WriteLine(ps.Id);
-                
+
                 countTotal++;
                 Patient p = app.OpenPatient(ps);
                 foreach (Course c in p.Courses.Where(x => !(x.Id.Contains("QA") || x.Id.Contains("test"))))
@@ -64,11 +64,15 @@ namespace FindBrachyPlans
                     {
                         if (plan.NumberOfFractions == 1 && !plan.Id.Contains("#") && !plan.Id.Contains(":"))
                         {
-                            if (p.PrimaryOncologistId.Length ==7) //4806689 chen; 2573524 koo;
+                            if (p.PrimaryOncologistId.Length == 7) //4806689 chen; 2573524 koo;
                             {
-                                countSRS++;
-                                Console.WriteLine(countSRS + "/" + p.Id + "/" + p.PrimaryOncologistId + "/" + c.Id.Replace("/","_") + "/" + plan.Id.Replace("/", "_") + "/" + plan.PlannedDosePerFraction.Dose +
-                                    "/"+ plan.TreatmentApprovalDate +"/"+countTotal + "/" +total);
+                                if (plan.PlannedDosePerFraction.Dose > 900)
+                                {
+                                    countSRS++;
+                                    Console.WriteLine(countSRS + "/" + p.Id + "/" + p.PrimaryOncologistId + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + plan.PlannedDosePerFraction.Dose +
+                                        "/" + plan.TreatmentApprovalDate + "/" + countTotal + "/" + total);
+
+                                }
                             }
                         }
                     }
