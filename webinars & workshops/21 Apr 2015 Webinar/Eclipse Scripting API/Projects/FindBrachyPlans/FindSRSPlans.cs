@@ -26,6 +26,7 @@ using System.Text;
 using System.Collections.Generic;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
+using System.Globalization;
 
 namespace FindBrachyPlans
 {
@@ -46,11 +47,25 @@ namespace FindBrachyPlans
                 Console.Error.WriteLine(e.ToString());
             }
         }
+
+        public enum Physician
+        {
+            Chen = 4806689,
+            Koo = 2573524,
+            Peng = 1393530,
+            Schmidt = 2170517,
+            Hunter = 5337978
+        }
+
+
         static void Execute(Application app)
         {
             int countTotal = 0;
             int countSRS = 0;
             int total = app.PatientSummaries.Count();
+            string format = "dddd, MMMM dd, yyyy h:mm:ss tt";
+            DateTime approvalDate;
+            CultureInfo provider = CultureInfo.InvariantCulture;
 
             foreach (PatientSummary ps in app.PatientSummaries.Where(x => (x.Id.Length == 12 && x.Id.StartsWith("1100"))))
             {
@@ -68,12 +83,14 @@ namespace FindBrachyPlans
                             {
                                 if (plan.PlannedDosePerFraction.Dose > 900)
                                 {
+                                    
                                     countSRS++;
-                                    Console.WriteLine(countSRS + "/" + p.Id + "/" + p.PrimaryOncologistId + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + plan.PlannedDosePerFraction.Dose +
-                                        "/" + plan.TreatmentApprovalDate + "/" + countTotal + "/" + total);
+                                    approvalDate = DateTime.ParseExact(plan.TreatmentApprovalDate, format, provider);
+                                    Console.WriteLine(countSRS + "/" + p.Id + "/" +Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + plan.PlannedDosePerFraction.Dose +
+                                        "/" + "\""+ approvalDate.ToShortDateString()+"\"" + "/" + countTotal + "/" + total);
 
                                 }
-                            }
+}
                         }
                     }
                 }
