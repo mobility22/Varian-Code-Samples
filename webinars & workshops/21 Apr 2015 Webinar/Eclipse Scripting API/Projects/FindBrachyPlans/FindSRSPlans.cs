@@ -75,6 +75,7 @@ namespace FindBrachyPlans
                 Patient p = app.OpenPatient(ps);
                 foreach (Course c in p.Courses.Where(x => !(x.Id.Contains("QA") || x.Id.Contains("test"))))
                 {
+                    int courseCount = 1;
                     foreach (PlanSetup plan in c.PlanSetups.Where(x => x.PlanType == PlanType.ExternalBeam && x.ApprovalStatus == PlanSetupApprovalStatus.TreatmentApproved))
                     {
                         if (plan.NumberOfFractions == 1 && !plan.Id.Contains("#") && !plan.Id.Contains(":"))
@@ -83,14 +84,14 @@ namespace FindBrachyPlans
                             {
                                 if (plan.PlannedDosePerFraction.Dose > 900)
                                 {
-                                    
-                                    countSRS++;
-                                    approvalDate = DateTime.ParseExact(plan.TreatmentApprovalDate, format, provider);
-                                    Console.WriteLine(countSRS + "/" + p.Id + "/" +Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + plan.PlannedDosePerFraction.Dose +
-                                        "/" + "\""+ approvalDate.ToShortDateString()+"\"" + "/" + countTotal + "/" + total);
 
+                                    countSRS+=courseCount;
+                                    approvalDate = DateTime.ParseExact(plan.TreatmentApprovalDate, format, provider);
+                                    Console.WriteLine(countSRS + "/" + p.Id + "/" + Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + Math.Round(plan.PlannedDosePerFraction.Dose) +
+                                        "/" + "\"" + approvalDate.ToShortDateString() + "\"" + "/" + countTotal + "/" + total);
+                                    courseCount = 0;
                                 }
-}
+                            }
                         }
                     }
                 }
