@@ -71,7 +71,7 @@ namespace FindBrachyPlans
             string energyTreatment = "";
             string accessory = "";
 
-            foreach (PatientSummary ps in app.PatientSummaries.Where(x => (x.Id.Length == 12 && x.Id.StartsWith("1100"))))
+            foreach (PatientSummary ps in app.PatientSummaries.OrderBy(x=>x.CreationDateTime).Where(x => (x.Id.Length == 12 && x.Id.StartsWith("1100"))))
             {
                 countTotal++;
                 int patientCount = 1;
