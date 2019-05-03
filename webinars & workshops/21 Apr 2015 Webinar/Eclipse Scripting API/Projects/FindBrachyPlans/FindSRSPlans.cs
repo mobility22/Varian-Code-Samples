@@ -69,6 +69,7 @@ namespace FindBrachyPlans
             CultureInfo provider = CultureInfo.InvariantCulture;
             string machineID = "";
             string energyTreatment = "";
+            string accessory = "";
 
             foreach (PatientSummary ps in app.PatientSummaries.Where(x => (x.Id.Length == 12 && x.Id.StartsWith("1100"))))
             {
@@ -86,20 +87,32 @@ namespace FindBrachyPlans
                             {
                                 if (plan.PlannedDosePerFraction.Dose > 900)
                                 {
-
+                                    int numberOfFields = 0;
                                     foreach (Beam b in plan.Beams)
                                     {
-                                        if (!b.IsSetupField) energyTreatment = b.EnergyModeDisplayName;
+                                        if (!b.IsSetupField)
+                                        {
+                                            energyTreatment = b.EnergyModeDisplayName;
+                                            numberOfFields++;
+                                            if (b.Applicator != null)
+                                                accessory = b.Applicator.Name;
+                                            if (b.MLC != null)
+                                                accessory = b.MLCPlanType.ToString();
+                                        }
 
-                                        if (b.TreatmentUnit != null) machineID = b.TreatmentUnit.Id;
+                                        if (b.TreatmentUnit != null)
+                                        {
+                                            machineID = b.TreatmentUnit.Id;
+                                        }
                                     }
                                     if (machineID.Equals("ROS_LINAC_TX"))
                                     {
                                         countPatient += patientCount;
                                         countSRS += courseCount;
                                         approvalDate = DateTime.ParseExact(plan.TreatmentApprovalDate, format, provider);
-                                        Console.WriteLine(countPatient + "/" + countSRS + "/" + p.Id + "/" + p.LastName+","+p.FirstName + "/" + Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + Math.Round(plan.PlannedDosePerFraction.Dose) +
-                                            "/" + energyTreatment + "/" + "\"" + approvalDate.ToShortDateString() + "\"" + "/" + countTotal + "/" + total);
+                                        Console.WriteLine(countPatient + "/" + countSRS + "/" + p.Id + "/" + p.LastName + "," + p.FirstName + "/" + Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + Math.Round(plan.PlannedDosePerFraction.Dose) +
+                                            "/" + energyTreatment + "/" + numberOfFields+ "/" + accessory +"/" + 
+                                            "\"" + approvalDate.ToShortDateString() + "\"" + "/" + countTotal + "/" + total);
                                         courseCount = 0;
                                         patientCount = 0;
                                     }
