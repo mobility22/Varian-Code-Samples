@@ -70,6 +70,7 @@ namespace FindBrachyPlans
             string machineID = "";
             string energyTreatment = "";
             string accessory = "";
+            Console.WriteLine("Patient Count/Course Count/Patient ID/Patient Name/Physician/Course/Plan/Fractions/Daily/Total/Energy/Number of Fields/Technique/Date/Sequence/Total");
 
             foreach (PatientSummary ps in app.PatientSummaries.OrderBy(x=>x.CreationDateTime).Where(x => (x.Id.Length == 12 && x.Id.StartsWith("1100"))))
             {
@@ -110,8 +111,9 @@ namespace FindBrachyPlans
                                         countPatient += patientCount;
                                         countSRS += courseCount;
                                         approvalDate = DateTime.ParseExact(plan.TreatmentApprovalDate, format, provider);
-                                        Console.WriteLine(countPatient + "/" + countSRS + "/" + p.Id + "/" + p.LastName + "," + p.FirstName + "/" + Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + Math.Round(plan.PlannedDosePerFraction.Dose) +
-                                            "/" + energyTreatment + "/" + numberOfFields+ "/" + accessory +"/" + 
+                                        Console.WriteLine(countPatient + "/" + countSRS + "/" + p.Id + "/" + p.LastName + "," + p.FirstName + "/" + Enum.GetName(typeof(Physician), Convert.ToInt32(p.PrimaryOncologistId)) + "/" + c.Id.Replace("/", "_") + "/" + plan.Id.Replace("/", "_") + "/" + plan.NumberOfFractions +
+                                            "/" + Math.Round(plan.PlannedDosePerFraction.Dose)+"/"+ Math.Round(plan.TotalDose.Dose)+"/"
+                                            + energyTreatment + "/" + numberOfFields+ "/" + accessory +"/" + 
                                             "\"" + approvalDate.ToShortDateString() + "\"" + "/" + countTotal + "/" + total);
                                         courseCount = 0;
                                         patientCount = 0;
